@@ -16,7 +16,9 @@ class HomeScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             CupertinoButton.filled(
-              child: const Text('Donate Blood'),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              borderRadius: BorderRadius.circular(30),
+              child: const Text('Donate Blood', style: TextStyle(fontSize: 18)),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -26,7 +28,9 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             CupertinoButton.filled(
-              child: const Text('View Donors'),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              borderRadius: BorderRadius.circular(30),
+              child: const Text('View Donors', style: TextStyle(fontSize: 18)),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -40,4 +44,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-

@@ -10,8 +10,13 @@ class DonationFormScreen extends StatefulWidget {
 class DonationFormScreenState extends State<DonationFormScreen> {
   final _formKey = GlobalKey<FormState>();
   String _name = '';
-  String _bloodType = '';
+  String _bloodType = 'A+';
   String _phoneNumber = '';
+  String _email = '';
+  String _address = '';
+  DateTime _donationDate = DateTime.now();
+
+  final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
   @override
   Widget build(BuildContext context) {
@@ -38,18 +43,18 @@ class DonationFormScreenState extends State<DonationFormScreen> {
                 },
               ),
               CupertinoTextFormFieldRow(
-                placeholder: 'Blood Type',
+                placeholder: 'Email',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your blood type';
+                    return 'Please enter your email';
                   }
-                  if (!RegExp(r'^(A|B|AB|O)[+-]$').hasMatch(value)) {
-                    return 'Please enter a valid blood type (e.g., A+, O-)';
+                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                    return 'Please enter a valid email';
                   }
                   return null;
                 },
                 onSaved: (value) {
-                  _bloodType = value!;
+                  _email = value!;
                 },
               ),
               CupertinoTextFormFieldRow(
@@ -65,6 +70,70 @@ class DonationFormScreenState extends State<DonationFormScreen> {
                 },
                 onSaved: (value) {
                   _phoneNumber = value!;
+                },
+              ),
+              CupertinoTextFormFieldRow(
+                placeholder: 'Address',
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your address';
+                  }
+                  return null;
+                },
+                onSaved: (value) {
+                  _address = value!;
+                },
+              ),
+              CupertinoButton(
+                child: Text('Donation Date: ${_donationDate.toLocal()}'.split(' ')[0]),
+                onPressed: () async {
+                  final DateTime? picked = await showCupertinoModalPopup<DateTime>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Container(
+                        height: 200,
+                        color: CupertinoColors.white,
+                        child: CupertinoDatePicker(
+                          mode: CupertinoDatePickerMode.date,
+                          initialDateTime: _donationDate,
+                          onDateTimeChanged: (DateTime newDate) {
+                            setState(() {
+                              _donationDate = newDate;
+                            });
+                          },
+                        ),
+                      );
+                    },
+                  );
+                  if (picked != null && picked != _donationDate) {
+                    setState(() {
+                      _donationDate = picked;
+                    });
+                  }
+                },
+              ),
+              CupertinoButton(
+                child: Text('Blood Type: $_bloodType'),
+                onPressed: () {
+                  showCupertinoModalPopup(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return CupertinoActionSheet(
+                        title: const Text('Select Blood Type'),
+                        actions: _bloodTypes.map((String bloodType) {
+                          return CupertinoActionSheetAction(
+                            onPressed: () {
+                              setState(() {
+                                _bloodType = bloodType;
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: Text(bloodType),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  );
                 },
               ),
               const SizedBox(height: 20),

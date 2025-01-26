@@ -15,15 +15,27 @@ class DonorListScreen extends StatelessWidget {
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Donor List'),
       ),
-      child: ListView.builder(
-        itemCount: donors.length,
-        itemBuilder: (context, index) {
-          return CupertinoListTile(
-            title: Text(donors[index]['name']!),
-            subtitle: Text('Blood Type: ${donors[index]['bloodType']}'),
-            leading: const Icon(CupertinoIcons.person),
-          );
-        },
+      child: Column(
+        children: [
+          CupertinoSearchTextField(
+            placeholder: 'Search by name or blood type',
+            onChanged: (value) {
+              // Implement search functionality
+            },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: donors.length,
+              itemBuilder: (context, index) {
+                return CupertinoListTile(
+                  title: Text(donors[index]['name']!),
+                  subtitle: Text('Blood Type: ${donors[index]['bloodType']}'),
+                  leading: const Icon(CupertinoIcons.person),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
