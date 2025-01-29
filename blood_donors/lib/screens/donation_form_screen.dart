@@ -12,8 +12,6 @@ class DonationFormScreenState extends State<DonationFormScreen> {
   String _name = '';
   String _bloodType = 'A+';
   String _phoneNumber = '';
-  String _email = '';
-  String _address = '';
   DateTime _donationDate = DateTime.now();
 
   final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -43,21 +41,6 @@ class DonationFormScreenState extends State<DonationFormScreen> {
                 },
               ),
               CupertinoTextFormFieldRow(
-                placeholder: 'Email',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _email = value!;
-                },
-              ),
-              CupertinoTextFormFieldRow(
                 placeholder: 'Phone Number',
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -70,18 +53,6 @@ class DonationFormScreenState extends State<DonationFormScreen> {
                 },
                 onSaved: (value) {
                   _phoneNumber = value!;
-                },
-              ),
-              CupertinoTextFormFieldRow(
-                placeholder: 'Address',
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your address';
-                  }
-                  return null;
-                },
-                onSaved: (value) {
-                  _address = value!;
                 },
               ),
               CupertinoButton(
