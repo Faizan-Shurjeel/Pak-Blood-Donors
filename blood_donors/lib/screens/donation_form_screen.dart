@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DonationFormScreen extends StatefulWidget {
   const DonationFormScreen({super.key});
@@ -14,7 +15,16 @@ class DonationFormScreenState extends State<DonationFormScreen> {
   String _phoneNumber = '';
   DateTime _donationDate = DateTime.now();
 
-  final List<String> _bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+  final List<String> _bloodTypes = [
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'AB+',
+    'AB-',
+    'O+',
+    'O-'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -56,9 +66,11 @@ class DonationFormScreenState extends State<DonationFormScreen> {
                 },
               ),
               CupertinoButton(
-                child: Text('Donation Date: ${_donationDate.toLocal()}'.split(' ')[0]),
+                child: Text(
+                    'Donation Date: ${_donationDate.toLocal()}'.split(' ')[0]),
                 onPressed: () async {
-                  final DateTime? picked = await showCupertinoModalPopup<DateTime>(
+                  final DateTime? picked =
+                      await showCupertinoModalPopup<DateTime>(
                     context: context,
                     builder: (BuildContext context) {
                       return Container(
@@ -110,27 +122,56 @@ class DonationFormScreenState extends State<DonationFormScreen> {
               const SizedBox(height: 20),
               CupertinoButton.filled(
                 child: const Text('Submit'),
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     _formKey.currentState!.save();
-                    // Here you would typically send this data to a server
-                    showCupertinoDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return CupertinoAlertDialog(
-                          title: const Text('Processing Data'),
-                          actions: <Widget>[
-                            CupertinoDialogAction(
-                              isDefaultAction: true,
-                              child: const Text('OK'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    try {
+                      await Supabase.instance.client
+                          .from('blood_donors')
+                          .insert({
+                        'Name': _name,
+                        'blood_group': _bloodType,
+                        'contact_number': _phoneNumber,
+                        'donation_date': _donationDate.toIso8601String(),
+                      });
+                      if (!mounted) return;
+                      showCupertinoDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CupertinoAlertDialog(
+                            title: const Text('Processing Data'),
+                            actions: <Widget>[
+                              CupertinoDialogAction(
+                                isDefaultAction: true,
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    } catch (e) {
+                      showCupertinoDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return CupertinoAlertDialog(
+                            title: const Text('Error'),
+                            content: Text('Failed to submit data: $e'),
+                            actions: <Widget>[
+                              CupertinoDialogAction(
+                                isDefaultAction: true,
+                                child: const Text('OK'),
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    }
                   }
                 },
               ),

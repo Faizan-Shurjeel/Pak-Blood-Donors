@@ -1,6 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/services.dart'; // for rootBundle
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'donor_details_screen.dart';
 
 class DonorListScreen extends StatefulWidget {
   const DonorListScreen({super.key});
@@ -10,59 +10,55 @@ class DonorListScreen extends StatefulWidget {
 }
 
 class _DonorListScreenState extends State<DonorListScreen> {
-  List<Map<String, dynamic>> _donors = [];
-  List<Map<String, dynamic>> _filteredDonors = [];
+  Future<List<Map<String, dynamic>>>? _donorsFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadDonors();
+    _donorsFuture = _loadDonors();
   }
 
-  Future<void> _loadDonors() async {
+  Future<List<Map<String, dynamic>>> _loadDonors() async {
     try {
-      final jsonString = await rootBundle.loadString('lib/screens/list.json');
-      final data = jsonDecode(jsonString);
-      if (data != null && data['blood_donors'] != null) {
-        // Flatten nested structure as needed
-        final donorsMap = data['blood_donors'] as Map<String, dynamic>;
-        final allDonors = <Map<String, dynamic>>[];
-        donorsMap.forEach((key, value) {
-          if (value is List) {
-            for (var donor in value) {
-              allDonors.add({
-                'name': donor['name'] ?? '',
-                'bloodType': donor['blood_group'] ?? '',
-                'contact': donor['contact_number'] ?? ''
-              });
-            }
-          }
-        });
-        setState(() {
-          _donors = allDonors;
-          _filteredDonors = List.from(allDonors);
-        });
-      }
+      final response =
+          await Supabase.instance.client.from('blood_donors').select();
+
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      // Handle parsing or file errors
-      setState(() {
-        _donors = [];
-        _filteredDonors = [];
-      });
-      // You could show an error dialog here if desired
+      print('Error loading donors: $e');
+      // Optionally show an error dialog
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text('Failed to load donors: $e'),
+          actions: [
+            CupertinoDialogAction(
+              child: const Text('OK'),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+      return [];
     }
   }
 
-  void _filterDonors(String query) {
+  void _filterDonors(String query, List<Map<String, dynamic>> donors) {
     query = query.toLowerCase();
     setState(() {
-      _filteredDonors = _donors.where((donor) {
-        final name = donor['name']?.toLowerCase() ?? '';
-        final bloodType = donor['bloodType']?.toLowerCase() ?? '';
-        return name.contains(query) || bloodType.contains(query);
+      _filteredDonors = donors.where((donor) {
+        final Name = donor['Name']?.toLowerCase() ?? '';
+        final blood_group = donor['blood_group']?.toLowerCase() ?? '';
+        final contact_number = donor['contact_number']?.toLowerCase() ?? '';
+        return Name.contains(query) ||
+            blood_group.contains(query) ||
+            contact_number.contains(query);
       }).toList();
     });
   }
+
+  List<Map<String, dynamic>> _filteredDonors = [];
 
   @override
   Widget build(BuildContext context) {
@@ -70,28 +66,59 @@ class _DonorListScreenState extends State<DonorListScreen> {
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Donor List'),
       ),
-      child: Column(
-        children: [
-          CupertinoSearchTextField(
-            placeholder: 'Search by name or blood type',
-            onChanged: _filterDonors,
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: _filteredDonors.length,
-              itemBuilder: (context, index) {
-                return CupertinoListTile(
-                  title: Text(_filteredDonors[index]['name'] ?? ''),
-                  subtitle: Text(
-                    'Blood Type: ${_filteredDonors[index]['bloodType']}'
-                    '\nContact: ${_filteredDonors[index]['contact']}',
+      child: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _donorsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CupertinoActivityIndicator(),
+            );
+          } else if (snapshot.hasError) {
+            return Center(
+              child: Text('Error: ${snapshot.error}'),
+            );
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(
+              child: Text('No donors found'),
+            );
+          } else {
+            final donors = snapshot.data!;
+            _filteredDonors = List.from(donors);
+            return Column(
+              children: [
+                CupertinoSearchTextField(
+                  placeholder: 'Search by Name or blood type',
+                  onChanged: (query) => _filterDonors(query, donors),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: _filteredDonors.length,
+                    itemBuilder: (context, index) {
+                      return CupertinoListTile(
+                        title: Text(_filteredDonors[index]['Name'] ?? ''),
+                        subtitle: Text(
+                          'Blood Type: ${_filteredDonors[index]['blood_group']}',
+                        ),
+                        leading: const Icon(CupertinoIcons.person),
+                        trailing: const Icon(CupertinoIcons.chevron_right),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            CupertinoPageRoute(
+                              builder: (context) => DonorDetailsScreen(
+                                donor: _filteredDonors[index],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
-                  leading: const Icon(CupertinoIcons.person),
-                );
-              },
-            ),
-          ),
-        ],
+                ),
+              ],
+            );
+          }
+        },
       ),
     );
   }

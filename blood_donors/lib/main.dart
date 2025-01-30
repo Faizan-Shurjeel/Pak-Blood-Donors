@@ -1,17 +1,32 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // Import flutter_dotenv
 import 'screens/home_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: CupertinoColors.systemRed, // Set the status bar color
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: CupertinoColors.systemRed,
   ));
+
+  // Initialize Supabase
+  await initializeSupabase();
+
   runApp(const BloodDonationApp());
+}
+
+Future<void> initializeSupabase() async {
+  // Access the Supabase URL and Anon Key from the .env file
+  await Supabase.initialize(
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
+  );
 }
 
 class BloodDonationApp extends StatelessWidget {
@@ -28,4 +43,3 @@ class BloodDonationApp extends StatelessWidget {
     );
   }
 }
-/*Best Results at: https://www.pakblood.com/ */

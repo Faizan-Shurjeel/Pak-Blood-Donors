@@ -22,7 +22,8 @@ class HomeScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.push(
                   context,
-                  CupertinoPageRoute(builder: (context) => const DonationFormScreen()),
+                  CupertinoPageRoute(
+                      builder: (context) => const DonationFormScreen()),
                 );
               },
             ),
